@@ -1,8 +1,8 @@
 diff --git a/llvm/CMakeLists.txt b/llvm/CMakeLists.txt
-index c2fb77d5a371..5ecd674a0c18 100644
+index fcbfed495..e9039ed89 100644
 --- a/llvm/CMakeLists.txt
 +++ b/llvm/CMakeLists.txt
-@@ -596,7 +596,7 @@ option(LLVM_ENABLE_LOCAL_SUBMODULE_VISIBILITY "Compile with -fmodules-local-subm
+@@ -679,7 +679,7 @@ option(LLVM_ENABLE_LOCAL_SUBMODULE_VISIBILITY "Compile with -fmodules-local-subm
  option(LLVM_ENABLE_LIBCXX "Use libc++ if available." OFF)
  option(LLVM_ENABLE_LLVM_LIBC "Set to on to link all LLVM executables against LLVM libc, assuming it is accessible by the host compiler." OFF)
  option(LLVM_STATIC_LINK_CXX_STDLIB "Statically link the standard library." OFF)
@@ -13,7 +13,7 @@ index c2fb77d5a371..5ecd674a0c18 100644
  
 diff --git a/llvm/include/llvm/Transforms/Obfuscation/BogusControlFlow.h b/llvm/include/llvm/Transforms/Obfuscation/BogusControlFlow.h
 new file mode 100644
-index 000000000000..1caa4f6b4d2f
+index 000000000..1caa4f6b4
 --- /dev/null
 +++ b/llvm/include/llvm/Transforms/Obfuscation/BogusControlFlow.h
 @@ -0,0 +1,47 @@
@@ -66,7 +66,7 @@ index 000000000000..1caa4f6b4d2f
 +#endif
 diff --git a/llvm/include/llvm/Transforms/Obfuscation/CryptoUtils.h b/llvm/include/llvm/Transforms/Obfuscation/CryptoUtils.h
 new file mode 100644
-index 000000000000..b37f1b18b854
+index 000000000..b37f1b18b
 --- /dev/null
 +++ b/llvm/include/llvm/Transforms/Obfuscation/CryptoUtils.h
 @@ -0,0 +1,152 @@
@@ -224,7 +224,7 @@ index 000000000000..b37f1b18b854
 +#endif
 diff --git a/llvm/include/llvm/Transforms/Obfuscation/Flattening.h b/llvm/include/llvm/Transforms/Obfuscation/Flattening.h
 new file mode 100644
-index 000000000000..fff5e4e2ce1f
+index 000000000..fff5e4e2c
 --- /dev/null
 +++ b/llvm/include/llvm/Transforms/Obfuscation/Flattening.h
 @@ -0,0 +1,39 @@
@@ -269,7 +269,7 @@ index 000000000000..fff5e4e2ce1f
 +#endif
 diff --git a/llvm/include/llvm/Transforms/Obfuscation/Split.h b/llvm/include/llvm/Transforms/Obfuscation/Split.h
 new file mode 100644
-index 000000000000..6e96bf609810
+index 000000000..6e96bf609
 --- /dev/null
 +++ b/llvm/include/llvm/Transforms/Obfuscation/Split.h
 @@ -0,0 +1,38 @@
@@ -313,7 +313,7 @@ index 000000000000..6e96bf609810
 +#endif
 diff --git a/llvm/include/llvm/Transforms/Obfuscation/StringObfuscation.h b/llvm/include/llvm/Transforms/Obfuscation/StringObfuscation.h
 new file mode 100755
-index 000000000000..9c54defc4c7b
+index 000000000..9c54defc4
 --- /dev/null
 +++ b/llvm/include/llvm/Transforms/Obfuscation/StringObfuscation.h
 @@ -0,0 +1,13 @@
@@ -332,7 +332,7 @@ index 000000000000..9c54defc4c7b
 +}
 diff --git a/llvm/include/llvm/Transforms/Obfuscation/Substitution.h b/llvm/include/llvm/Transforms/Obfuscation/Substitution.h
 new file mode 100644
-index 000000000000..31d42557cd26
+index 000000000..31d42557c
 --- /dev/null
 +++ b/llvm/include/llvm/Transforms/Obfuscation/Substitution.h
 @@ -0,0 +1,37 @@
@@ -375,7 +375,7 @@ index 000000000000..31d42557cd26
 +#endif
 diff --git a/llvm/include/llvm/Transforms/Obfuscation/Utils.h b/llvm/include/llvm/Transforms/Obfuscation/Utils.h
 new file mode 100644
-index 000000000000..36c69515ae66
+index 000000000..36c69515a
 --- /dev/null
 +++ b/llvm/include/llvm/Transforms/Obfuscation/Utils.h
 @@ -0,0 +1,13 @@
@@ -393,92 +393,79 @@ index 000000000000..36c69515ae66
 +
 +#endif
 diff --git a/llvm/lib/Passes/PassBuilder.cpp b/llvm/lib/Passes/PassBuilder.cpp
-index 000594f0e7f4..5537956b5f18 100644
+index 8bb78c8c7..dfa550e65 100644
 --- a/llvm/lib/Passes/PassBuilder.cpp
 +++ b/llvm/lib/Passes/PassBuilder.cpp
-@@ -290,6 +290,12 @@
+@@ -384,6 +384,12 @@
  #include "llvm/Transforms/Vectorize/VectorCombine.h"
  #include <optional>
  
-+#include "llvm/Transforms/Obfuscation/Flattening.h"
-+#include "llvm/Transforms/Obfuscation/Substitution.h"
 +#include "llvm/Transforms/Obfuscation/BogusControlFlow.h"
++#include "llvm/Transforms/Obfuscation/Flattening.h"
 +#include "llvm/Transforms/Obfuscation/Split.h"
 +#include "llvm/Transforms/Obfuscation/StringObfuscation.h"
++#include "llvm/Transforms/Obfuscation/Substitution.h"
 +
  using namespace llvm;
  
- static const Regex DefaultAliasRegex(
+ cl::opt<bool> llvm::PrintPipelinePasses(
 diff --git a/llvm/lib/Passes/PassBuilderPipelines.cpp b/llvm/lib/Passes/PassBuilderPipelines.cpp
-index 6ede86382912..3a7415476968 100644
+index 1584d3087..336497a25 100644
 --- a/llvm/lib/Passes/PassBuilderPipelines.cpp
 +++ b/llvm/lib/Passes/PassBuilderPipelines.cpp
-@@ -136,6 +136,12 @@
+@@ -151,6 +151,12 @@
  #include "llvm/Transforms/Vectorize/SLPVectorizer.h"
  #include "llvm/Transforms/Vectorize/VectorCombine.h"
  
-+#include "llvm/Transforms/Obfuscation/Flattening.h"
-+#include "llvm/Transforms/Obfuscation/Substitution.h"
 +#include "llvm/Transforms/Obfuscation/BogusControlFlow.h"
++#include "llvm/Transforms/Obfuscation/Flattening.h"
 +#include "llvm/Transforms/Obfuscation/Split.h"
 +#include "llvm/Transforms/Obfuscation/StringObfuscation.h"
++#include "llvm/Transforms/Obfuscation/Substitution.h"
 +
  using namespace llvm;
  
- static cl::opt<InliningAdvisorMode> UseInlineAdvisor(
-@@ -285,6 +291,15 @@ cl::opt<bool> EnableMemProfContextDisambiguation(
- extern cl::opt<bool> EnableInferAlignmentPass;
+ namespace llvm {
+@@ -320,6 +326,11 @@ extern cl::opt<bool> PGOInstrumentColdFunctionOnly;
+ extern cl::opt<bool> EnableMemProfContextDisambiguation;
  } // namespace llvm
  
-+// Flags for obfuscation
-+#if defined(LLVM_ENABLE_NEW_PASS_MANAGER) && LLVM_ENABLE_NEW_PASS_MANAGER == 1
 +static cl::opt<std::string> AesSeed("aesSeed", cl::init(""),
 +                                    cl::desc("seed for the AES-CTR PRNG"));
-+
 +static cl::opt<std::string> Seed("seed", cl::init(""),
-+                           cl::desc("seed for the random"));
-+#endif
++                                 cl::desc("seed for the random"));
 +
  PipelineTuningOptions::PipelineTuningOptions() {
    LoopInterleaving = true;
    LoopVectorization = true;
-@@ -298,6 +313,17 @@ PipelineTuningOptions::PipelineTuningOptions() {
-   MergeFunctions = EnableMergeFunctions;
+@@ -336,6 +347,11 @@ PipelineTuningOptions::PipelineTuningOptions() {
    InlinerThreshold = -1;
    EagerlyInvalidateAnalyses = EnableEagerlyInvalidateAnalyses;
+   DevirtualizeSpeculatively = EnableDevirtualizeSpeculatively;
 +
-+#if defined(LLVM_ENABLE_NEW_PASS_MANAGER) && LLVM_ENABLE_NEW_PASS_MANAGER == 1
-+  if(!AesSeed.empty()) {
-+    llvm::cryptoutils->prng_seed(AesSeed.c_str());
-+  }
-+
-+  //random generator
-+  if(!Seed.empty()) {
-+    llvm::cryptoutils->prng_seed(Seed.c_str());
-+  }
-+#endif
++  if (!AesSeed.empty())
++    llvm::cryptoutils->prng_seed(AesSeed);
++  if (!Seed.empty())
++    llvm::cryptoutils->prng_seed(Seed);
  }
  
  namespace llvm {
-@@ -1363,6 +1389,13 @@ PassBuilder::buildModuleOptimizationPipeline(OptimizationLevel Level,
-   invokeOptimizerEarlyEPCallbacks(MPM, Level);
+@@ -1521,6 +1537,11 @@ PassBuilder::buildModuleOptimizationPipeline(OptimizationLevel Level,
  
    FunctionPassManager OptimizePM;
-+
-+  // Obfuscation
+ 
 +  OptimizePM.addPass(BogusControlFlowPass());
 +  OptimizePM.addPass(SplitBasicBlockPass());
 +  OptimizePM.addPass(FlatteningPass());
 +  OptimizePM.addPass(SubstitutionPass());
 +
-   // Scheduling LoopVersioningLICM when inlining is over, because after that
-   // we may see more accurate aliasing. Reason to run this late is that too
-   // early versioning may prevent further inlining due to increase of code
-@@ -1446,10 +1479,15 @@ PassBuilder::buildModuleOptimizationPipeline(OptimizationLevel Level,
-   OptimizePM.addPass(
-       SimplifyCFGPass(SimplifyCFGOptions().convertSwitchRangeToICmp(true)));
+   // Only drop unnecessary assumes post-inline and post-link, as otherwise
+   // additional uses of the affected value may be introduced through inlining
+   // and CSE.
+@@ -1628,10 +1649,14 @@ PassBuilder::buildModuleOptimizationPipeline(OptimizationLevel Level,
+                           .speculateUnpredictables(true)
+                           .hoistLoadsStoresWithCondFaulting(true)));
  
-+  // Obfuscation
 +  OptimizePM.addPass(SubstitutionPass());
 +
    // Add the core optimizing pipeline.
@@ -487,22 +474,22 @@ index 6ede86382912..3a7415476968 100644
  
 +  MPM.addPass(StringObfuscationNewPass());
 +
-   invokeOptimizerLastEPCallbacks(MPM, Level);
- 
-   // Split out cold code. Splitting is done late to avoid hiding context from
+   // AllocToken transforms heap allocation calls; this needs to run late after
+   // other allocation call transformations (such as those in InstCombine).
+   if (!LTOPreLink)
 diff --git a/llvm/lib/Passes/PassRegistry.def b/llvm/lib/Passes/PassRegistry.def
-index e59795c7b084..4484fcab0b0c 100644
+index 2cfb5b259..99c196166 100644
 --- a/llvm/lib/Passes/PassRegistry.def
 +++ b/llvm/lib/Passes/PassRegistry.def
-@@ -115,6 +115,7 @@ MODULE_PASS("print<inline-advisor>", InlineAdvisorAnalysisPrinterPass(dbgs()))
- MODULE_PASS("print<module-debuginfo>", ModuleDebugInfoPrinterPass(dbgs()))
+@@ -152,6 +152,7 @@ MODULE_PASS("print<reg-usage>", PhysicalRegisterUsageInfoPrinterPass(errs()))
+ MODULE_PASS("prof-verify", ProfileVerifierPass())
  MODULE_PASS("pseudo-probe", SampleProfileProbePass(TM))
  MODULE_PASS("pseudo-probe-update", PseudoProbeUpdatePass())
 +MODULE_PASS("obf-str", StringObfuscationNewPass())
  MODULE_PASS("recompute-globalsaa", RecomputeGlobalsAAPass())
  MODULE_PASS("rel-lookup-table-converter", RelLookupTableConverterPass())
  MODULE_PASS("rewrite-statepoints-for-gc", RewriteStatepointsForGC())
-@@ -336,6 +337,10 @@ FUNCTION_PASS("guard-widening", GuardWideningPass())
+@@ -447,6 +448,10 @@ FUNCTION_PASS("guard-widening", GuardWideningPass())
  FUNCTION_PASS("gvn-hoist", GVNHoistPass())
  FUNCTION_PASS("gvn-sink", GVNSinkPass())
  FUNCTION_PASS("helloworld", HelloWorldPass())
@@ -510,24 +497,24 @@ index e59795c7b084..4484fcab0b0c 100644
 +FUNCTION_PASS("obf-sub", SubstitutionPass())
 +FUNCTION_PASS("obf-bcf", BogusControlFlowPass())
 +FUNCTION_PASS("obf-split", SplitBasicBlockPass())
- FUNCTION_PASS("indirectbr-expand", IndirectBrExpandPass(TM))
+ FUNCTION_PASS("indirectbr-expand", IndirectBrExpandPass(*TM))
  FUNCTION_PASS("infer-address-spaces", InferAddressSpacesPass())
  FUNCTION_PASS("infer-alignment", InferAlignmentPass())
 diff --git a/llvm/lib/Transforms/CMakeLists.txt b/llvm/lib/Transforms/CMakeLists.txt
-index 84a7e34147d0..26ab00f2cef6 100644
+index 7046f2f4b..076894514 100644
 --- a/llvm/lib/Transforms/CMakeLists.txt
 +++ b/llvm/lib/Transforms/CMakeLists.txt
-@@ -9,4 +9,5 @@ add_subdirectory(Hello)
+@@ -8,4 +8,5 @@ add_subdirectory(Vectorize)
  add_subdirectory(ObjCARC)
  add_subdirectory(Coroutines)
  add_subdirectory(CFGuard)
 +add_subdirectory(Obfuscation)
  add_subdirectory(HipStdPar)
 diff --git a/llvm/lib/Transforms/IPO/CMakeLists.txt b/llvm/lib/Transforms/IPO/CMakeLists.txt
-index 034f1587ae8d..5c73dfe3c5c2 100644
+index 1c4ee0336..95e298143 100644
 --- a/llvm/lib/Transforms/IPO/CMakeLists.txt
 +++ b/llvm/lib/Transforms/IPO/CMakeLists.txt
-@@ -72,4 +72,5 @@ add_llvm_component_library(LLVMipo
+@@ -75,4 +75,5 @@ add_llvm_component_library(LLVMipo
    TransformUtils
    Vectorize
    Instrumentation
@@ -535,10 +522,10 @@ index 034f1587ae8d..5c73dfe3c5c2 100644
    )
 diff --git a/llvm/lib/Transforms/Obfuscation/BogusControlFlow.cpp b/llvm/lib/Transforms/Obfuscation/BogusControlFlow.cpp
 new file mode 100644
-index 000000000000..f669b2c5bbcd
+index 000000000..984146bd4
 --- /dev/null
 +++ b/llvm/lib/Transforms/Obfuscation/BogusControlFlow.cpp
-@@ -0,0 +1,714 @@
+@@ -0,0 +1,715 @@
 +//===- BogusControlFlow.cpp - BogusControlFlow Obfuscation pass ----------===//
 +//
 +//                     The LLVM Compiler Infrastructure
@@ -819,8 +806,9 @@ index 000000000000..f669b2c5bbcd
 +    // part, because they actually are updated in the second part according to
 +    // them.
 +    BasicBlock::iterator i1 = basicBlock->begin();
-+    if (basicBlock->getFirstNonPHIOrDbgOrLifetime())
-+      i1 = (BasicBlock::iterator)basicBlock->getFirstNonPHIOrDbgOrLifetime();
++    auto FirstNonPHI = basicBlock->getFirstNonPHIOrDbgOrLifetime();
++    if (FirstNonPHI != basicBlock->end())
++      i1 = FirstNonPHI;
 +    Twine *var;
 +    var = new Twine("originalBB");
 +    BasicBlock *originalBB = basicBlock->splitBasicBlock(i1, *var);
@@ -850,7 +838,7 @@ index 000000000000..f669b2c5bbcd
 +    // The always true condition. End of the first block
 +    Twine *var4 = new Twine("condition");
 +    FCmpInst *condition =
-+        new FCmpInst(*basicBlock, FCmpInst::FCMP_TRUE, LHS, RHS, *var4);
++        new FCmpInst(basicBlock->end(), FCmpInst::FCMP_TRUE, LHS, RHS, *var4);
 +    DEBUG_WITH_TYPE("gen", errs() << "bcf: Always true condition created\n");
 +
 +    // Jump to the original basic block if the condition is true or
@@ -886,7 +874,7 @@ index 000000000000..f669b2c5bbcd
 +    // We add at the end a new always true condition
 +    Twine *var6 = new Twine("condition2");
 +    FCmpInst *condition2 =
-+        new FCmpInst(*originalBB, CmpInst::FCMP_TRUE, LHS, RHS, *var6);
++        new FCmpInst(originalBB->end(), CmpInst::FCMP_TRUE, LHS, RHS, *var6);
 +    BranchInst::Create(originalBBpart2, alteredBB, (Value *)condition2,
 +                       originalBB);
 +    DEBUG_WITH_TYPE("gen", errs()
@@ -1255,7 +1243,7 @@ index 000000000000..f669b2c5bbcd
 +}
 diff --git a/llvm/lib/Transforms/Obfuscation/CMakeLists.txt b/llvm/lib/Transforms/Obfuscation/CMakeLists.txt
 new file mode 100644
-index 000000000000..f9324e7ca16a
+index 000000000..f9324e7ca
 --- /dev/null
 +++ b/llvm/lib/Transforms/Obfuscation/CMakeLists.txt
 @@ -0,0 +1,15 @@
@@ -1277,7 +1265,7 @@ index 000000000000..f9324e7ca16a
 \ No newline at end of file
 diff --git a/llvm/lib/Transforms/Obfuscation/CryptoUtils.cpp b/llvm/lib/Transforms/Obfuscation/CryptoUtils.cpp
 new file mode 100644
-index 000000000000..baa49168d6f6
+index 000000000..baa49168d
 --- /dev/null
 +++ b/llvm/lib/Transforms/Obfuscation/CryptoUtils.cpp
 @@ -0,0 +1,1250 @@
@@ -2533,7 +2521,7 @@ index 000000000000..baa49168d6f6
 +}
 diff --git a/llvm/lib/Transforms/Obfuscation/Flattening.cpp b/llvm/lib/Transforms/Obfuscation/Flattening.cpp
 new file mode 100644
-index 000000000000..0ec0d0c3e066
+index 000000000..0ec0d0c3e
 --- /dev/null
 +++ b/llvm/lib/Transforms/Obfuscation/Flattening.cpp
 @@ -0,0 +1,271 @@
@@ -2810,7 +2798,7 @@ index 000000000000..0ec0d0c3e066
 +}
 diff --git a/llvm/lib/Transforms/Obfuscation/LICENSE-OBFUSCATOR.TXT b/llvm/lib/Transforms/Obfuscation/LICENSE-OBFUSCATOR.TXT
 new file mode 100644
-index 000000000000..ea86a85bf6f2
+index 000000000..f37bceb6e
 --- /dev/null
 +++ b/llvm/lib/Transforms/Obfuscation/LICENSE-OBFUSCATOR.TXT
 @@ -0,0 +1,44 @@
@@ -2820,14 +2808,14 @@ index 000000000000..ea86a85bf6f2
 +University of Illinois/NCSA
 +Open Source License
 +
-+Copyright (c) 2014 Haute Ecole d'Ingénierie et de Gestion du Canton de Vaud (HEIG-VD). All rights reserved. 
++Copyright (c) 2014 Haute Ecole d'Ingénierie et de Gestion du Canton de Vaud (HEIG-VD). All rights reserved.
 +
 +Developed by:
 +
 +    Obfuscator-LLVM Team
 +
 +    Haute-Ecole d'Ingénierie et de Gestion du Canton de Vaud (HEIG-VD), a part
-+    of the University of Applied Sciences and Arts Western Switzerland (HES-SO) 
++    of the University of Applied Sciences and Arts Western Switzerland (HES-SO)
 +
 +    http://o-llvm.org
 +
@@ -2845,10 +2833,10 @@ index 000000000000..ea86a85bf6f2
 +      this list of conditions and the following disclaimers in the
 +      documentation and/or other materials provided with the distribution.
 +
-+    * Neither the names of the Obfuscator-LLVM Team, the Haute Ecole d'Ingénierie 
-+      et de Gestion du Canton de Vaud (HEIG-VD), the University of Applied Sciences 
-+      and Arts Western Switzerland (HES-SO) nor the names of its contributors 
-+      may be used to endorse or promote products derived from this Software 
++    * Neither the names of the Obfuscator-LLVM Team, the Haute Ecole d'Ingénierie
++      et de Gestion du Canton de Vaud (HEIG-VD), the University of Applied Sciences
++      and Arts Western Switzerland (HES-SO) nor the names of its contributors
++      may be used to endorse or promote products derived from this Software
 +      without specific prior written permission.
 +
 +THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
@@ -2860,10 +2848,10 @@ index 000000000000..ea86a85bf6f2
 +SOFTWARE.
 diff --git a/llvm/lib/Transforms/Obfuscation/LLVMBuild.txt b/llvm/lib/Transforms/Obfuscation/LLVMBuild.txt
 new file mode 100644
-index 000000000000..0a6bf1ddcc42
+index 000000000..489463da3
 --- /dev/null
 +++ b/llvm/lib/Transforms/Obfuscation/LLVMBuild.txt
-@@ -0,0 +1,25 @@
+@@ -0,0 +1,23 @@
 +;===- ./lib/Transforms/Scalar/LLVMBuild.txt --------------------*- Conf -*--===;
 +;
 +;                     The LLVM Compiler Infrastructure
@@ -2887,11 +2875,9 @@ index 000000000000..0a6bf1ddcc42
 +parent = Transforms
 +library_name = Obfuscation
 +required_libraries = TransformUtils Analysis Core Support
-+
-+
 diff --git a/llvm/lib/Transforms/Obfuscation/SplitBasicBlocks.cpp b/llvm/lib/Transforms/Obfuscation/SplitBasicBlocks.cpp
 new file mode 100644
-index 000000000000..eb9914b731f7
+index 000000000..eb9914b73
 --- /dev/null
 +++ b/llvm/lib/Transforms/Obfuscation/SplitBasicBlocks.cpp
 @@ -0,0 +1,159 @@
@@ -3056,7 +3042,7 @@ index 000000000000..eb9914b731f7
 +}
 diff --git a/llvm/lib/Transforms/Obfuscation/StringObfuscation.cpp b/llvm/lib/Transforms/Obfuscation/StringObfuscation.cpp
 new file mode 100755
-index 000000000000..f8aab9cb207e
+index 000000000..f8aab9cb2
 --- /dev/null
 +++ b/llvm/lib/Transforms/Obfuscation/StringObfuscation.cpp
 @@ -0,0 +1,258 @@
@@ -3320,7 +3306,7 @@ index 000000000000..f8aab9cb207e
 +}
 diff --git a/llvm/lib/Transforms/Obfuscation/Substitution.cpp b/llvm/lib/Transforms/Obfuscation/Substitution.cpp
 new file mode 100644
-index 000000000000..1b0f59002d35
+index 000000000..1b0f59002
 --- /dev/null
 +++ b/llvm/lib/Transforms/Obfuscation/Substitution.cpp
 @@ -0,0 +1,630 @@
@@ -3957,7 +3943,7 @@ index 000000000000..1b0f59002d35
 \ No newline at end of file
 diff --git a/llvm/lib/Transforms/Obfuscation/Utils.cpp b/llvm/lib/Transforms/Obfuscation/Utils.cpp
 new file mode 100644
-index 000000000000..dfb8c8c2710c
+index 000000000..76b2cf992
 --- /dev/null
 +++ b/llvm/lib/Transforms/Obfuscation/Utils.cpp
 @@ -0,0 +1,172 @@
@@ -4009,11 +3995,11 @@ index 000000000000..dfb8c8c2710c
 +      }
 +    }
 +    for (unsigned int i = 0; i != tmpReg.size(); ++i) {
-+      DemoteRegToStack(*tmpReg.at(i), f->begin()->getTerminator());
++      DemoteRegToStack(*tmpReg.at(i));
 +    }
 +
 +    for (unsigned int i = 0; i != tmpPhi.size(); ++i) {
-+      DemotePHIToStack(tmpPhi.at(i), f->begin()->getTerminator());
++      DemotePHIToStack(tmpPhi.at(i));
 +    }
 +
 +  } while (tmpReg.size() != 0 || tmpPhi.size() != 0);

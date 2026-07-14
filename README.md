@@ -1,4 +1,6 @@
-## Configure LLVM to add obfuscation support
+## Configure LLVM 22.x with obfuscation support
+
+The `main` branch targets LLVM 22.x. Use the `release/18.x` branch for LLVM 18.x.
 
 ```bash
 git clone -b main https://github.com/sr-tream/obfuscator
