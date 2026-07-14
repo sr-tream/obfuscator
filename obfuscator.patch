@@ -3938,6 +3938,7 @@ index 000000000..76b2cf992
 +#include "llvm/IR/Constants.h"
 +#include "llvm/IR/Module.h"
 +#include "llvm/Support/raw_ostream.h"
++#include <cctype>
 +#include <sstream>
 +
 +using namespace llvm;
@@ -3993,27 +3994,25 @@ index 000000000..76b2cf992
 +}
 +
 +StringRef readAnnotate(Function *f, StringRef attr) {
-+  // Get annotation variable
 +  auto *glob = f->getParent()->getGlobalVariable("llvm.global.annotations");
-+
-+  if (glob == NULL)
++  if (!glob || !glob->hasInitializer())
 +    return "";
 +
-+  // Get the array
-+  auto *ca = cast<ConstantArray>(glob->getOperand(0));
++  auto *ca = dyn_cast<ConstantArray>(glob->getInitializer());
 +  if (!ca)
 +    return "";
 +
 +  for (Value *Op : ca->operands()) {
-+    // Get the struct
-+    auto *structAn = cast<ConstantStruct>(Op);
++    auto *structAn = dyn_cast<ConstantStruct>(Op);
++    if (!structAn || structAn->getNumOperands() < 2)
++      continue;
 +
 +    auto *AnnotatedVar = structAn->getOperand(0)->stripPointerCasts();
 +    if (AnnotatedVar != f)
 +      continue;
 +
 +    auto *annoteStr =
-+        cast<GlobalVariable>(structAn->getOperand(1)->stripPointerCasts());
++        dyn_cast<GlobalVariable>(structAn->getOperand(1)->stripPointerCasts());
 +    if (!annoteStr)
 +      continue;
 +
@@ -4024,35 +4023,26 @@ index 000000000..76b2cf992
 +    if (!data->isString())
 +      continue;
 +
-+    auto attr_pos = static_cast<std::size_t>(-1);
-+    auto attribute = data->getAsString();
-+    while (true) {
-+      if (attr_pos != std::string::npos)
-+        attr_pos = attribute.find(attr, attr_pos + attr.size());
-+      else
-+        attr_pos = attribute.find(attr);
-+      if (attr_pos == std::string::npos)
++    StringRef annotations = data->getAsString();
++    while (!annotations.empty()) {
++      while (!annotations.empty() &&
++             (std::isspace(static_cast<unsigned char>(annotations.front())) ||
++              annotations.front() == '\0'))
++        annotations = annotations.drop_front();
++      if (annotations.empty())
 +        break;
-+      if (attr_pos != 0 && !std::isspace(attribute[attr_pos - 1]))
-+        continue;
-+      if (attr_pos + attr.size() < attribute.size() &&
-+          !std::isspace(attribute[attr_pos + attr.size()]) &&
-+          attribute[attr_pos + attr.size()] != '=' &&
-+          attribute[attr_pos + attr.size()] != '\0')
-+        continue;
 +
-+      auto assign = attribute.find('=');
-+      if (assign != std::string::npos) {
-+        auto value = assign + 1;
-+        while (std::isspace(attribute[value]))
-+          ++value;
-+        auto end = value + 1;
-+        while (end < attribute.size() && !std::isspace(attribute[end]) &&
-+               attribute[end] != '\0')
-+          ++end;
-+        return attribute.substr(value, end - value);
-+      } else
-+        return "1";
++      size_t tokenEnd = 0;
++      while (tokenEnd < annotations.size() &&
++             !std::isspace(static_cast<unsigned char>(annotations[tokenEnd])) &&
++             annotations[tokenEnd] != '\0')
++        ++tokenEnd;
++
++      StringRef token = annotations.take_front(tokenEnd);
++      annotations = annotations.drop_front(tokenEnd);
++      auto nameAndValue = token.split('=');
++      if (nameAndValue.first == attr)
++        return nameAndValue.second.empty() ? "1" : nameAndValue.second;
 +    }
 +  }
 +
